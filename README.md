@@ -1,40 +1,85 @@
-# Secure Web Messaging (AES-128 P2P Encryption)
+# 🔐 Secure P2P Web Messaging (AES-128 Fernet)
 
-A secure, Flask-based dual-node peer-to-peer (P2P) messaging application demonstrating symmetric cryptography (`cryptography.fernet`), RESTful API communication, and secure environment variable management.
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-3.0%2B-000000?logo=flask&logoColor=white)
+![Cryptography](https://img.shields.io/badge/Cryptography-AES--128%20Fernet-success)
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 
-## 📌 Architecture & Security Features
-* **Symmetric Encryption:** Utilizes `cryptography.fernet` (AES-128 in CBC mode with HMAC authentication) to encrypt message payloads before transmission between nodes.
-* **Key Management Strategy:** Hardcoded keys are strictly avoided. The system loads `FERNET_KEY` and `SECRET_KEY` from `.env` using `python-dotenv`, isolating secrets from source control.
-* **Dual-Node P2P Architecture:** Supports running two independent nodes (**Node Alpha** on port `5001` and **Node Beta** on port `5002`) that exchange encrypted payloads via `/api/send`, `/api/receive`, and `/api/inbox`.
-* **Tamper Detection:** Automatically catches invalid tokens or mismatched keys, flagging unauthorized or corrupted payloads in the inbox.
+A dual-node peer-to-peer (P2P) encrypted web messaging application built with **Python**, **Flask**, and **`cryptography.fernet`**. It demonstrates authenticated symmetric encryption (**AES-128-CBC + HMAC-SHA256**), RESTful node-to-node communication, and tamper detection.
 
-## 🚀 Installation & Execution
+---
 
-### Prerequisites
-* Python 3.8+
+## 🏗️ P2P Communication Architecture
 
-### Setup
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Firatdondar/SecureMessagingApp.git
-   cd SecureMessagingApp
-   ```
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Configure environment variables:
-   ```bash
-   cp .env.example .env
-   ```
-   *(Ensure `FERNET_KEY` in `.env` contains a valid 32-byte URL-safe base64-encoded Fernet key, which you can generate via `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`).*
+```mermaid
+sequenceDiagram
+    participant Alpha as Node Alpha (:5001)
+    participant Crypto as Fernet AES-128 + HMAC
+    participant Beta as Node Beta (:5002)
 
-4. Start both nodes in separate terminals:
-   ```bash
-   # Terminal 1 (Node Alpha - Port 5001)
-   python app.py 5001
+    Alpha->>Crypto: Encrypt plaintext payload with shared FERNET_KEY
+    Crypto-->>Alpha: Base64 Ciphertext Token
+    Alpha->>Beta: POST /api/receive (JSON ciphertext)
+    Beta->>Crypto: Verify HMAC signature & decrypt token
+    Crypto-->>Beta: Verified Plaintext Message
+```
 
-   # Terminal 2 (Node Beta - Port 5002)
-   python app.py 5002
-   ```
-5. Open `http://127.0.0.1:5001` and `http://127.0.0.1:5002` in your browser to exchange encrypted messages.
+---
+
+## ✨ Key Features
+
+- **Authenticated Symmetric Encryption:** Uses `cryptography.fernet` (`AES-128-CBC` with `PKCS7` padding and `HMAC-SHA256` message authentication) so payloads are never transmitted in plaintext.
+- **Environment-Isolated Key Management:** Loads `FERNET_KEY` and `SECRET_KEY` strictly from `.env` via `python-dotenv`.
+- **Dual-Node P2P Topology:** Runs two independent Flask instances (**Node Alpha** on port `5001` and **Node Beta** on port `5002`) exchanging encrypted packets over `/api/send`, `/api/receive`, and `/api/inbox`.
+- **Cryptographic Tamper Detection:** Automatically rejects altered ciphertexts or mismatched keys with `InvalidToken` verification alerts.
+
+---
+
+## 🗂️ Project Structure
+
+```text
+Secure-Messaging-App/
+├── templates/
+│   └── index.html           # Real-time P2P chat interface
+├── .env.example             # Environment variable template
+├── app.py                   # Flask P2P node server & Fernet encryption endpoints
+├── requirements.txt         # Python dependencies
+├── LICENSE                  # MIT License
+└── README.md                # Project documentation
+```
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone & Install Dependencies
+```bash
+git clone https://github.com/Firatdondar/Secure-Messaging-App.git
+cd Secure-Messaging-App
+pip install -r requirements.txt
+```
+
+### 2. Configure Environment Key
+```bash
+cp .env.example .env
+```
+*(Generate a fresh 32-byte URL-safe Base64 Fernet key if needed:)*
+```bash
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+### 3. Launch Both P2P Nodes
+```bash
+# Terminal 1 — Node Alpha (Port 5001)
+python app.py 5001
+
+# Terminal 2 — Node Beta (Port 5002)
+python app.py 5002
+```
+Open `http://127.0.0.1:5001` and `http://127.0.0.1:5002` in your browser to exchange encrypted messages.
+
+---
+
+## 📄 License
+
+Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
